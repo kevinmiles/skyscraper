@@ -22,7 +22,13 @@ def skyscraper_service():
     """Runs the skyscraper service which determines when spiders have to be
     executed and executes them"""
 
-    prometheus_client.start_http_server(8000)
+    if skyscraper.settings.PROMETHEUS_METRICS_PORT:
+        prometheus_client.start_http_server(
+            skyscraper.settings.PROMETHEUS_METRICS_PORT)
+    else:
+        logging.warning('PROMETHEUS_METRICS_PORT not defined, Prometheus'
+                        + ' metrics endpoint will not be available.')
+
     prometheus_num_configs = prometheus_client.Gauge(
         'skyscraper_git_spiders',
         'Number of spiders available in the Skyscraper git repository')
