@@ -86,6 +86,14 @@ class DeclarativeRepository(object):
             subprocess.call(
                 ['git', 'clone', self.repo_path, self.workdir],
                 stdout=subprocess.DEVNULL)
+
+            # Do not use TOR proxy (http_proxy env variable) for git
+            # TODO: We should allow the user to set a custom proxy here, too,
+            # e.g. for company networks
+            subprocess.call(
+                ['git', 'config', '--add', 'remote.origin.proxy', '""'],
+                cwd=self.workdir,
+                stdout=subprocess.DEVNULL)
         elif not self._check_remote():
             raise RepositoryException(
                 'It seems this is not a repository cloned from {}'.format(
