@@ -39,7 +39,7 @@ class SkyscraperRunner(object):
                 # over and over)
                 heapq.heappush(self.next_scheduled_runtimes,
                     (datetime.datetime.utcnow(),
-                    (config.engine, config.project, config.spider)))
+                    (config.project, config.spider)))
 
     def run_due_spiders(self):
         # heaps are sorted in python
@@ -48,7 +48,10 @@ class SkyscraperRunner(object):
                 and datetime.datetime.utcnow() > self.next_scheduled_runtimes[0][0]:
 
             item = heapq.heappop(self.next_scheduled_runtimes)
-            engine, project, spider = item[1]
+            project, spider = item[1]
+
+            config = self.spider_config[project][spider]
+            engine = config.engine
 
             SPIDERS_EXECUTED_COUNT.inc()
             runner = self.spider_runners.get(engine, None)
@@ -57,9 +60,10 @@ class SkyscraperRunner(object):
 
             # TODO: This method should be called run(), but this will require
             # some refactoring on the ScrapySpiderRunner
-            runner.run_standalone(project, spider)
+            options = {'tor': True} if config.use_tor else {}
+            runner.run_standalone(project, spider, options)
 
-            self._reschedule_spider(engine, project, spider)
+            self._reschedule_spider(project, spider)
 
     def _has_new_config(self, project, spider, config):
         try:
@@ -69,7 +73,7 @@ class SkyscraperRunner(object):
             # does not exist yet = is new config
             return True
 
-    def _reschedule_spider(self, engine, project, spider):
+    def _reschedule_spider(self, project, spider):
         try:
             config = self.spider_config[project][spider]
 
@@ -82,7 +86,7 @@ class SkyscraperRunner(object):
                     + datetime.timedelta(minutes=config.recurrence_minutes)
                 heapq.heappush(
                     self.next_scheduled_runtimes,
-                    (next_runtime, (engine, project, spider)))
+                    (next_runtime, (config.engine, project, spider)))
         except KeyError:
             # spider was removed, do not schedule again
             pass
@@ -192,7 +196,7 @@ class ChromeSpiderRunner(object):
         self.spider_loader = spider_loader
         self.pipelines = pipelines
 
-    def run_standalone(self, project, spider):
+    def run_standalone(self, project, spider, options={}):
         asyncio.get_event_loop().run_until_complete(self.run(project, spider))
 
     async def run(self, project, spider):

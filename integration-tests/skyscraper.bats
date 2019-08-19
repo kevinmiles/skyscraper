@@ -41,3 +41,15 @@ teardown() {
 
     [ "$count" -eq 1 ]
 }
+
+@test "check TOR has different IP" {
+    skyscraper-spider tor checkip --use-tor
+    count=$(ls /tmp/skyscraper-integration-tests/items/tor/checkip/ | wc -l)
+
+    [ "$count" -eq 1 ]
+
+    spider_ip=$(cat /tmp/skyscraper-integration-tests/items/tor/checkip/*.json | jq -r '.data.ip')
+    machine_ip=$(curl -s "https://api.ipify.org/?format=json" | jq -r '.ip')
+
+    [ "$spider_ip" != "$machine_ip" ]
+}
