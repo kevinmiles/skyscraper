@@ -9,3 +9,5 @@ SKYSCRAPER_GIT_REPOSITORY=https://github.com/molescrape/spider-examples.git
 SKYSCRAPER_GIT_WORKDIR=/tmp/skyscraper-integration-tests/spiders
 SKYSCRAPER_GIT_SUBFOLDER=''
 SKYSCRAPER_GIT_BRANCH=master
+
+SKYSCRAPER_TOR_PROXY=127.0.0.1:8118
