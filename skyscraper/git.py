@@ -84,7 +84,8 @@ class DeclarativeRepository(object):
         # defined source repository or something entirely different
         if len(os.listdir(self.workdir)) == 0:
             subprocess.call(
-                ['git', 'clone', self.repo_path, self.workdir],
+                ['git', 'clone', '--single-branch', '--branch', self.branch,
+                    self.repo_path, self.workdir],
                 stdout=subprocess.DEVNULL)
 
             # Do not use TOR proxy (http_proxy env variable) for git
