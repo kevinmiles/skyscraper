@@ -1,6 +1,7 @@
 import datetime
 import os
 import json
+from json.decoder import JSONDecodeError
 import gzip
 
 
@@ -47,8 +48,15 @@ def archive_old_files(directory):
         with gzip.open(gzippath, 'wt') as f:
             for filepath in relevant_files:
                 with open(filepath) as fin:
-                    data = json.load(fin)
-                    f.write(json.dumps(data) + '\n')
+                    try:
+                        data = json.load(fin)
+                        f.write(json.dumps(data) + '\n')
+                    except JSONDecodeError:
+                        # if it is not valid JSON read it as JSON lines
+                        fin.seek(0)
+                        for line in fin:
+                            data = json.loads(line)
+                            f.write(json.dumps(data) + '\n')
 
         for filepath in relevant_files:
             os.remove(filepath)
