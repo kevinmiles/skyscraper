@@ -181,10 +181,9 @@ class ChromeCrawler(object):
 
             res = await spider.parse(page, response)
             if isinstance(res, scrapy.Item):
-                yield res
+                return [res]
             else:
-                for item in res:
-                    yield item
+                return res
 
     async def close(self):
         await self.browser.close()
@@ -208,7 +207,9 @@ class ChromeSpiderRunner(object):
         spider = spider_class()
 
         pipelines = [self._load_pipeline(p, self.crawler) for p in self.pipelines]
-        async for item in self.crawler.crawl(spider):
+
+        results = await self.crawler.crawl(spider)
+        for item in results:
             for pipeline in pipelines:
                 try:
                     item = pipeline.process_item(item, spider)
