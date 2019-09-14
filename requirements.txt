@@ -1,15 +1,12 @@
 python-dotenv
 scrapy
-psycopg2-binary
 click
+pyyaml
+prometheus_client
 # pandas + beautifulsoup + html5lib used for reading tabular data
 pandas
 beautifulsoup4
 html5lib
-# requests is required to send pidar notification
-requests
-pyyaml
-prometheus_client
 
 # extras
 boto3

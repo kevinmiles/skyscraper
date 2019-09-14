@@ -26,10 +26,12 @@ setup(
         'python-dotenv',
         'scrapy',
         'click',
-        'pandas',
-        'requests',
         'pyyaml',
         'prometheus_client',
+        # pandas + beautifulsoup + html5lib used for reading tabular data
+        'pandas',
+        'beautifulsoup4',
+        'html5lib',
     ],
     extras_require=extras,
     entry_points='''
