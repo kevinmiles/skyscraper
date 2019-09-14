@@ -176,6 +176,7 @@ class ChromeCrawler(object):
             self.browser = await self.browser_future
         frontier = spider.start_urls
 
+        results = []
         for url in frontier:
             try:
                 page = await self.browser.newPage()
@@ -183,12 +184,14 @@ class ChromeCrawler(object):
 
                 res = await spider.parse(page, response)
                 if isinstance(res, scrapy.Item):
-                    return [res]
+                    results.append(res)
                 else:
-                    return res
+                    results += res
             except pyppeteer.errors.NetworkError:
                 logging.error(
                     'Pyppeteer NetworkError while visiting "{}"'.format(url))
+
+        return results
 
     async def close(self):
         await self.browser.close()
