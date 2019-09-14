@@ -86,7 +86,7 @@ class SkyscraperRunner(object):
                     + datetime.timedelta(minutes=config.recurrence_minutes)
                 heapq.heappush(
                     self.next_scheduled_runtimes,
-                    (next_runtime, (config.engine, project, spider)))
+                    (next_runtime, (project, spider)))
         except KeyError:
             # spider was removed, do not schedule again
             pass
