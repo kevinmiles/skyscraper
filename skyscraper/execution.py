@@ -7,6 +7,7 @@ import logging
 import prometheus_client
 import asyncio
 import scrapy
+import pyppeteer.errors
 
 from scrapy.exceptions import DropItem
 from scrapy.crawler import CrawlerProcess
@@ -176,14 +177,18 @@ class ChromeCrawler(object):
         frontier = spider.start_urls
 
         for url in frontier:
-            page = await self.browser.newPage()
-            response = await page.goto(url)
+            try:
+                page = await self.browser.newPage()
+                response = await page.goto(url)
 
-            res = await spider.parse(page, response)
-            if isinstance(res, scrapy.Item):
-                return [res]
-            else:
-                return res
+                res = await spider.parse(page, response)
+                if isinstance(res, scrapy.Item):
+                    return [res]
+                else:
+                    return res
+            except pyppeteer.errors.NetworkError:
+                logging.error(
+                    'Pyppeteer NetworkError while visiting "{}"'.format(url))
 
     async def close(self):
         await self.browser.close()
