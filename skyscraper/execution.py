@@ -204,7 +204,20 @@ class ChromeSpiderRunner(object):
         self.pipelines = pipelines
 
     def run_standalone(self, project, spider, options={}):
-        asyncio.get_event_loop().run_until_complete(self.run(project, spider))
+        # Run in a separate process to mitigate issues with Chrome connection
+        # failing and killing the whole service
+        command = [
+            'skyscraper-spider',
+            project,
+            spider,
+            '--engine',
+            'chrome',
+        ]
+
+        if 'tor' in options and options['tor']:
+            command.append('--use-tor')
+
+        subprocess.call(command)
 
     async def run(self, project, spider):
         # TODO: Improve setting the namespace, should not have to be done
