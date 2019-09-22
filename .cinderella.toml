@@ -1,0 +1,6 @@
+[test]
+commands = [
+    "pip install virtualenv",
+    "virtualenv venv",
+    "source venv/bin/activate && pip install tox && tox",
+]
