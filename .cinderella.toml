@@ -2,5 +2,5 @@
 commands = [
     "pip install virtualenv",
     "virtualenv venv",
-    "source venv/bin/activate && pip install tox && tox",
+    "bash -c \"source venv/bin/activate && pip install tox && tox\"",
 ]
