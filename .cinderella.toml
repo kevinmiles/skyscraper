@@ -3,6 +3,6 @@ commands = [
     "pip install virtualenv",
     # Install a Python 3.7
     "bash .cinderella/install_python.sh 3.7.4",
-    "virtualenv -p bin/python/3.7.4/bin/python3 venv",
+    "bash -c \"virtualenv -p $HOME/bin/python/3.7.4/bin/python3 venv\"",
     "bash -c \"source venv/bin/activate && pip install tox && tox\"",
 ]
