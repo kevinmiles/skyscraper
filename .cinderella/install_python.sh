@@ -3,6 +3,11 @@
 VERSION=$1
 TMP_FOLDER=/tmp
 
+if [ -d "$HOME/bin/python/$VERSION" ]; then
+    echo "Python $VERSION already installed"
+    exit 0
+fi
+
 wget -O $TMP_FOLDER/Python-$VERSION.tgz https://www.python.org/ftp/python/$VERSION/Python-$VERSION.tgz
 
 if [ $? -ne 0 ]; then
