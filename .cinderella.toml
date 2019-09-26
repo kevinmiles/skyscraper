@@ -1,3 +1,7 @@
+# Requires the following packages to be installed by a root user:
+# - libssl-dev
+# - libbz2-dev
+
 [test]
 commands = [
     "pip install virtualenv",
