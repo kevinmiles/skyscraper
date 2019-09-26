@@ -18,6 +18,14 @@ fi
 tar xf $TMP_FOLDER/Python-$VERSION.tgz -C $TMP_FOLDER
 mkdir -p $HOME/bin/python/$VERSION
 
+# Enable SSL
+setup=$TMP_FOLDER/Python-$VERSION/Modules/Setup.dist
+echo "_socket socketmodule.c" >> $setup
+echo "SSL=/usr/include/openssl" >> $setup
+echo "_ssl _ssl.c \\" >> $setup
+echo '        -DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \\' >> $setup
+echo '        -L$(SSL)/lib -lssl -lcrypto' >> $setup
+
 cd $TMP_FOLDER/Python-$VERSION \
     && ./configure --prefix=$HOME/bin/python/$VERSION \
     && make && make install \
