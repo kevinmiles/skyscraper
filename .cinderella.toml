@@ -1,4 +1,5 @@
 # Requires the following packages to be installed by a root user:
+# - bats
 # - libssl-dev
 # - libbz2-dev
 
