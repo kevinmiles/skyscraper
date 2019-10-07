@@ -111,7 +111,7 @@ class ScrapySpiderRunner(object):
         if 'tor' in options and options['tor']:
             command.append('--use-tor')
 
-        subprocess.call(command)
+        subprocess.Popen(command)
 
     def run(self, namespace, spider, semaphore=None, options={}):
         """Run the given spider with the defined options. Will block
@@ -217,7 +217,7 @@ class ChromeSpiderRunner(object):
         if 'tor' in options and options['tor']:
             command.append('--use-tor')
 
-        subprocess.call(command)
+        subprocess.Popen(command)
 
     async def run(self, project, spider):
         # TODO: Improve setting the namespace, should not have to be done
