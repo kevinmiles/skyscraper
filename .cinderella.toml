@@ -9,4 +9,5 @@ commands = [
     "bash .cinderella/install_python.sh 3.7.4",
     "bash -c \"virtualenv -p $HOME/bin/python/3.7.4/bin/python3 venv\"",
     "bash -c \"source venv/bin/activate && pip install tox && tox\"",
+    "bash -c \"source venv/bin/activate && cp integration-tests/dotenv .env && bats integration-tests/\"",
 ]
