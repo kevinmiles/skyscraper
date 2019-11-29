@@ -12,3 +12,12 @@ commands = [
     "bash -c \"source venv/bin/activate && pip install tox && tox\"",
     "bash -c \"source venv/bin/activate && cp integration-tests/dotenv .env && bats integration-tests/\"",
 ]
+
+[build]
+commands = [
+    "pip install --user pyinstaller",
+    "bash -c \"virtualenv -p $HOME/bin/python/3.7.4/bin/python3 venv\"",
+    "bash -c \"source venv/bin/activate && pip install -r requirements.txt && $HOME/.local/bin/pyinstaller --paths=./env/lib/python3.8/site-packages --hiddenimport packaging.version --hiddenimport packaging.specifiers --hiddenimport packaging.requirements --hiddenimport packaging.markers --hiddenimport skyscraper.pipelines --hiddenimport skyscraper.pipelines.metainfo --hiddenimport skyscraper.spiderloader --hiddenimport skyscraper.pipelines.filesystem --hiddenimport skyscraper.pipelines.aws --hiddenimport skyscraper.pipelines.mqtt --noconfirm --onefile pyinstaller/cli.py\"",
+    # TODO: Move to a builds location
+    # "mv dist/cli  ...",
+]
