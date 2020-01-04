@@ -53,3 +53,6 @@ To start working switch to the virtual environment with
   * probably I can get rid of scrapy, because I do not need parallelism and
     it complicates stuff like downloading files
   * getting started: command to start program + URL to start scraping
+* Configurable with:
+  * URL
+  * Selector to follow -> if new, load and possibly download a file
