@@ -43,3 +43,9 @@ all features and an already downloaded Chrome headless setup.
 
 To start working switch to the virtual environment with
 `source env/bin/activate`. You can execute the tests with `make test`.
+
+
+## TODO
+
+* Add a default scraper that stores full HTML for a page and scrapes the
+  whole domain from a start URL
