@@ -49,3 +49,7 @@ To start working switch to the virtual environment with
 
 * Add a default scraper that stores full HTML for a page and scrapes the
   whole domain from a start URL
+* Make molescrape so simple that somebody wants to use it
+  * probably I can get rid of scrapy, because I do not need parallelism and
+    it complicates stuff like downloading files
+  * getting started: command to start program + URL to start scraping
