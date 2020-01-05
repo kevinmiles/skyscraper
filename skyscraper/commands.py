@@ -9,6 +9,7 @@ import pyppeteer
 from scrapy.utils.project import get_project_settings
 
 import skyscraper.archive
+import skyscraper.config
 import skyscraper.execution
 import skyscraper.git
 import skyscraper.mail
@@ -126,6 +127,34 @@ def skyscraper_spider(namespace, spider, engine, use_tor):
     else:
         runner = skyscraper.execution.ScrapySpiderRunner(proxy)
         runner.run(namespace, spider, semaphore=None, options=options)
+
+
+@click.command()
+@click.option('--yml-file', help='Select the_ YML configuration file')
+def skyscraper_spider_yml(yml_file):
+    proxy = None
+    if os.environ.get('SKYSCRAPER_TOR_PROXY'):
+        proxy = os.environ.get('SKYSCRAPER_TOR_PROXY')
+
+    if not os.path.isfile(yml_file):
+        click.echo('YAML file does not exist')
+        return
+
+    parts = os.path.split(os.path.realpath(yml_file))
+    if len(parts) < 2:
+        click.echo('Please store spiders inside a project folder')
+        return
+
+    namespace = parts[-2]
+    spider, _ = os.path.splitext(parts[-1])
+
+    click.echo('Executing spider %s/%s.' % (namespace, spider))
+
+    with open(yml_file) as f:
+        config = skyscraper.config.load(f, namespace, spider)
+
+    runner = skyscraper.execution.SkyscraperSpiderRunner(proxy)
+    runner.run(config)
 
 
 @click.command()

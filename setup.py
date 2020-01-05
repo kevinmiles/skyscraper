@@ -32,12 +32,14 @@ setup(
         'pandas',
         'beautifulsoup4',
         'html5lib',
+        'requests',
     ],
     extras_require=extras,
     entry_points='''
         [console_scripts]
         skyscraper=skyscraper.commands:skyscraper_service
         skyscraper-spider=skyscraper.commands:skyscraper_spider
+        skyscraper-spider-yml=skyscraper.commands:skyscraper_spider_yml
         skyscraper-archive=skyscraper.commands:skyscraper_archive
     ''',
 )

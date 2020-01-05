@@ -35,6 +35,13 @@ teardown() {
     [ "$count" -eq 1 ]
 }
 
+@test "crawl example.com with configuration yml" {
+    skyscraper-spider-yml --yml-file integration-tests/spiders/test/examplecom.yml
+    count=$(ls /tmp/skyscraper-integration-tests/items/test/examplecom/ | wc -l)
+
+    [ "$count" -eq 1 ]
+}
+
 @test "crawl example.com with Chrome headless from git" {
     skyscraper-spider chrome_headless example --engine chrome
     count=$(ls /tmp/skyscraper-integration-tests/items/chrome_headless/example/ | wc -l)

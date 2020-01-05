@@ -1,0 +1,10 @@
+engine: scrapy
+start_urls:
+  - https://example.com/
+rules:
+  start_urls:
+    extract:
+      # Extract structured data with these selectors and stores them to the
+      # 'data' field of an item
+      - selector: 'body div h1'
+        field: 'title'

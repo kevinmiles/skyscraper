@@ -11,6 +11,8 @@ class Configuration(object):
         self.enabled = False
         self.spider_type = 'custom'
         self.spider_data = {}
+        self.start_urls = []
+        self.rules = {}
 
     @classmethod
     def from_dict(cls, d):
@@ -27,6 +29,8 @@ class Configuration(object):
         c.enabled = d.get('enabled', False)
         c.spider_type = d.get('spider_type', 'custom')
         c.spider_data = d.get('spider_data', {})
+        c.start_urls = d.get('start_urls', [])
+        c.rules = d.get('rules', {})
 
         return c
 
@@ -34,11 +38,13 @@ class Configuration(object):
         return self.project == other.project \
             and self.spider == other.spider \
             and self.recurrence_minutes == other.recurrence_minutes \
-            and self.use_tor == other.use_tor
+            and self.use_tor == other.use_tor \
+            and self.start_urls == other.start_urls \
+            and self.rules == other.rules
 
     def __hash__(self):
         return hash((self.project, self.spider, self.recurrence_minutes,
-                     self.use_tor))
+                     self.use_tor, self.start_urls, self.rules))
 
 
 class YamlException(Exception):

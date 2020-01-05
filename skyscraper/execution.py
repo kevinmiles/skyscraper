@@ -5,9 +5,12 @@ import heapq
 import collections
 import logging
 import prometheus_client
-import asyncio
 import scrapy
+import requests
 import pyppeteer.errors
+from lxml import html
+
+import skyscraper.items
 
 from scrapy.exceptions import DropItem
 from scrapy.crawler import CrawlerProcess
@@ -91,6 +94,52 @@ class SkyscraperRunner(object):
         except KeyError:
             # spider was removed, do not schedule again
             pass
+
+
+class SkyscraperSpiderRunner(object):
+    def __init__(self, http_proxy):
+        self.http_proxy = http_proxy
+        self.backlog = []
+        self.items = []
+
+    def run(self, config):
+        self.backlog += config.start_urls
+        self.items = []
+
+        while len(self.backlog):
+            r = self.backlog.pop()
+
+            response = requests.get(r)
+
+            item = skyscraper.items.BasicItem()
+            item['url'] = response.url
+            item['source'] = response.content
+            item['data'] = self._run_extractors(
+                'start_urls', config.rules, response.content)
+            self.items.append(item)
+
+            print(item)
+
+            # TODO: Write results. To do this cleanly we have to
+            # get rid of scrapy's pipeline system, because this does not
+            # integrate well with other spider engines
+
+            # TODO: Add follow-urls and handle this correctly
+            # in the _run_extractors call
+
+    def _run_extractors(self, page_level_id, rules, content):
+        data = {}
+
+        if page_level_id in rules and 'extract' in rules[page_level_id]:
+            tree = html.fromstring(content)
+
+            for extractor in rules[page_level_id]['extract']:
+                data[extractor['field']] = list(map(
+                    lambda x: x.text_content(),
+                    tree.cssselect(extractor['selector'])))
+
+        return data
+
 
 
 class ScrapySpiderRunner(object):
