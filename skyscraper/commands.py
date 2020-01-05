@@ -131,7 +131,10 @@ def skyscraper_spider(namespace, spider, engine, use_tor):
 
 @click.command()
 @click.option('--yml-file', help='Select the_ YML configuration file')
-def skyscraper_spider_yml(yml_file):
+@click.option('--folder', help='Store results to this folder')
+def skyscraper_spider_yml(yml_file, folder):
+    # TODO: Read folder from program configuration, which currently is the
+    # scrapy configuration (but should become a skyscraper configuration)
     proxy = None
     if os.environ.get('SKYSCRAPER_TOR_PROXY'):
         proxy = os.environ.get('SKYSCRAPER_TOR_PROXY')
@@ -140,20 +143,18 @@ def skyscraper_spider_yml(yml_file):
         click.echo('YAML file does not exist')
         return
 
-    parts = os.path.split(os.path.realpath(yml_file))
-    if len(parts) < 2:
-        click.echo('Please store spiders inside a project folder')
-        return
+    path, filename = os.path.split(os.path.realpath(yml_file))
+    path, spiderfolder = os.path.split(path)
 
-    namespace = parts[-2]
-    spider, _ = os.path.splitext(parts[-1])
+    namespace = spiderfolder
+    spider, _ = os.path.splitext(filename)
 
     click.echo('Executing spider %s/%s.' % (namespace, spider))
 
     with open(yml_file) as f:
         config = skyscraper.config.load(f, namespace, spider)
 
-    runner = skyscraper.execution.SkyscraperSpiderRunner(proxy)
+    runner = skyscraper.execution.SkyscraperSpiderRunner(folder, proxy)
     runner.run(config)
 
 

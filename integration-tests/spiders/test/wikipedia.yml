@@ -1,0 +1,15 @@
+engine: scrapy
+start_urls:
+  - https://en.wikipedia.org/wiki/Main_Page
+rules:
+  start_urls:
+    stores_item: false
+    follow:
+      - selector: '#mp-left a'
+        next: article_urls
+  article_urls:
+    extract:
+      # Extract structured data with these selectors and stores them to the
+      # 'data' field of an item
+      - selector: 'h1#firstHeading'
+        field: 'title'

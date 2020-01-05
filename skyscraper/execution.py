@@ -9,8 +9,10 @@ import scrapy
 import requests
 import pyppeteer.errors
 from lxml import html
+import urllib.parse
 
 import skyscraper.items
+import skyscraper.storage
 
 from scrapy.exceptions import DropItem
 from scrapy.crawler import CrawlerProcess
@@ -97,35 +99,41 @@ class SkyscraperRunner(object):
 
 
 class SkyscraperSpiderRunner(object):
-    def __init__(self, http_proxy):
+    def __init__(self, storage_folder, http_proxy):
         self.http_proxy = http_proxy
         self.backlog = []
         self.items = []
+        self.storage = skyscraper.storage.JsonStorage(storage_folder)
 
     def run(self, config):
-        self.backlog += config.start_urls
-        self.items = []
+        for url in config.start_urls:
+            self.backlog.append(('start_urls', url))
 
         while len(self.backlog):
-            r = self.backlog.pop()
+            page_level_id, url = self.backlog.pop()
 
-            response = requests.get(r)
+            response = requests.get(url)
 
-            item = skyscraper.items.BasicItem()
-            item['url'] = response.url
-            item['source'] = response.content
-            item['data'] = self._run_extractors(
-                'start_urls', config.rules, response.content)
-            self.items.append(item)
+            if self._stores_items(page_level_id, config.rules):
+                item = {
+                    'url': response.url,
+                    'namespace': config.project,
+                    'spider': config.spider,
+                    'data': self._run_extractors(
+                        page_level_id, config.rules, response.text),
+                }
 
-            print(item)
+                if page_level_id in config.rules \
+                        and 'source' in config.rules[page_level_id] \
+                        and config.rules[page_level_id]['source']:
+                    item['source'] = response.text
 
-            # TODO: Write results. To do this cleanly we have to
-            # get rid of scrapy's pipeline system, because this does not
-            # integrate well with other spider engines
+                self.storage.store_item(item)
 
-            # TODO: Add follow-urls and handle this correctly
-            # in the _run_extractors call
+            for f in self._run_follows(page_level_id, config.rules, response.text):
+                level = f[0]
+                url = urllib.parse.urljoin(response.url, f[1])
+                self.backlog.append((level, url))
 
     def _run_extractors(self, page_level_id, rules, content):
         data = {}
@@ -140,6 +148,28 @@ class SkyscraperSpiderRunner(object):
 
         return data
 
+    def _run_follows(self, page_level_id, rules, content):
+        links = []
+
+        if page_level_id in rules and 'follow' in rules[page_level_id]:
+            tree = html.fromstring(content)
+
+            for extractor in rules[page_level_id]['follow']:
+                next_level = extractor['next']
+
+                for url in tree.cssselect(extractor['selector']):
+                    links.append((next_level, url.get('href')))
+
+        return links
+
+    def _stores_items(self, page_level_id, rules):
+        if page_level_id not in rules:
+            return False
+        elif 'store_item' not in rules[page_level_id]:
+            # by default, assume items should be stored
+            return True
+        else:
+            return rules[page_level_id]['store_item']
 
 
 class ScrapySpiderRunner(object):
