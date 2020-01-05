@@ -15,11 +15,7 @@ class JsonStorage(object):
 
         destination_folder = os.path.join(self.target_folder, project, spider)
 
-        try:
-            os.makedirs(destination_folder)
-        except OSError:
-            # Already exists
-            pass
+        os.makedirs(destination_folder, exist_ok=True)
 
         filepath = os.path.join(destination_folder, filename)
         with open(filepath, 'w+') as f:
