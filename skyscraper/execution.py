@@ -110,51 +110,51 @@ class SkyscraperSpiderRunner(object):
             self.backlog.append(('start_urls', url))
 
         while len(self.backlog):
-            page_level_id, url = self.backlog.pop()
+            rule_id, url = self.backlog.pop()
 
             response = requests.get(url)
 
-            if self._stores_items(page_level_id, config.rules):
+            if self._stores_items(rule_id, config.rules):
                 item = {
                     'url': response.url,
                     'namespace': config.project,
                     'spider': config.spider,
                     'data': self._run_extractors(
-                        page_level_id, config.rules, response.text),
+                        rule_id, config.rules, response.text),
                 }
 
-                if page_level_id in config.rules \
-                        and 'source' in config.rules[page_level_id] \
-                        and config.rules[page_level_id]['source']:
+                if rule_id in config.rules \
+                        and 'source' in config.rules[rule_id] \
+                        and config.rules[rule_id]['source']:
                     item['source'] = response.text
 
                 self.storage.store_item(item)
 
-            for f in self._run_follows(page_level_id, config.rules, response.text):
+            for f in self._run_follows(rule_id, config.rules, response.text):
                 level = f[0]
                 url = urllib.parse.urljoin(response.url, f[1])
                 self.backlog.append((level, url))
 
-    def _run_extractors(self, page_level_id, rules, content):
+    def _run_extractors(self, rule_id, rules, content):
         data = {}
 
-        if page_level_id in rules and 'extract' in rules[page_level_id]:
+        if rule_id in rules and 'extract' in rules[rule_id]:
             tree = html.fromstring(content)
 
-            for extractor in rules[page_level_id]['extract']:
+            for extractor in rules[rule_id]['extract']:
                 data[extractor['field']] = list(map(
                     lambda x: x.text_content(),
                     tree.cssselect(extractor['selector'])))
 
         return data
 
-    def _run_follows(self, page_level_id, rules, content):
+    def _run_follows(self, rule_id, rules, content):
         links = []
 
-        if page_level_id in rules and 'follow' in rules[page_level_id]:
+        if rule_id in rules and 'follow' in rules[rule_id]:
             tree = html.fromstring(content)
 
-            for extractor in rules[page_level_id]['follow']:
+            for extractor in rules[rule_id]['follow']:
                 next_level = extractor['next']
 
                 for url in tree.cssselect(extractor['selector']):
@@ -162,14 +162,14 @@ class SkyscraperSpiderRunner(object):
 
         return links
 
-    def _stores_items(self, page_level_id, rules):
-        if page_level_id not in rules:
+    def _stores_items(self, rule_id, rules):
+        if rule_id not in rules:
             return False
-        elif 'store_item' not in rules[page_level_id]:
+        elif 'store_item' not in rules[rule_id]:
             # by default, assume items should be stored
             return True
         else:
-            return rules[page_level_id]['store_item']
+            return rules[rule_id]['store_item']
 
 
 class ScrapySpiderRunner(object):
