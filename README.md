@@ -41,3 +41,7 @@ with `spider.yml` being the path to your spider's YAML configuration file.
 * Configurable with:
   * URL
   * Selector to follow -> if new, load and possibly download a file
+* Implement a `RequestsEngine` and a `ChromeEngine` to perform the GET
+  requests; and `SkyscraperCrawler` to execute the logic (which will use one
+  of the two engines); `SkyscraperRunner` will execute all spiders (daemon
+  mode)
