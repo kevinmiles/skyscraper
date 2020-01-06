@@ -49,11 +49,11 @@ if os.environ.get('SKYSCRAPER_PIPELINE_USE_DUPLICATESFILTER_DYNAMODB') \
 if os.environ.get('SKYSCRAPER_PIPELINE_USE_OUTPUT_FOLDER') \
         and int(os.environ.get('SKYSCRAPER_PIPELINE_USE_OUTPUT_FOLDER')):
     ITEM_PIPELINES['skyscraper.pipelines.filesystem.SaveDataToFolderPipeline'] = 300
-    SKYSCRAPER_STORAGE_FOLDER_PATH = os.environ.get('SKYSCRAPER_STORAGE_FOLDER_PATH')
 
-    # by default, store results in $CWD/results/
-    if not SKYSCRAPER_STORAGE_FOLDER_PATH:
-        SKYSCRAPER_STORAGE_FOLDER_PATH = os.path.join(os.getcwd(), 'results')
+    local_storage = os.path.join(os.getcwd(), 'results')
+    SKYSCRAPER_STORAGE_FOLDER_PATH = os.environ.get(
+        'SKYSCRAPER_STORAGE_FOLDER_PATH',
+        default=local_storage)
 
 if os.environ.get('SKYSCRAPER_CHROME_NO_SANDBOX'):
     SKYSCRAPER_CHROME_NO_SANDBOX = bool(os.environ.get('SKYSCRAPER_CHROME_NO_SANDBOX'))
