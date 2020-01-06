@@ -56,3 +56,4 @@ To start working switch to the virtual environment with
 * Configurable with:
   * URL
   * Selector to follow -> if new, load and possibly download a file
+* create `skyscraper/__main__.py` so that `python -m skyscraper --help` works
