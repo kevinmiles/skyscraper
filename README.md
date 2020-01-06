@@ -41,4 +41,3 @@ with `spider.yml` being the path to your spider's YAML configuration file.
 * Configurable with:
   * URL
   * Selector to follow -> if new, load and possibly download a file
-* create `skyscraper/__main__.py` so that `python -m skyscraper --help` works
