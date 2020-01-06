@@ -130,32 +130,41 @@ def skyscraper_spider(namespace, spider, engine, use_tor):
 
 
 @click.command()
-@click.option('--yml-file', help='Select the_ YML configuration file')
-@click.option('--folder', help='Store results to this folder')
-def skyscraper_spider_yml(yml_file, folder):
-    # TODO: Read folder from program configuration, which currently is the
-    # scrapy configuration (but should become a skyscraper configuration)
-    proxy = None
-    if os.environ.get('SKYSCRAPER_TOR_PROXY'):
-        proxy = os.environ.get('SKYSCRAPER_TOR_PROXY')
-
-    if not os.path.isfile(yml_file):
-        click.echo('YAML file does not exist')
+@click.option('--daemon', default=False, is_flag=True, help='Search for all spiders and run skyscraper in daemonized mode')
+@click.option('--spider', 'spider_file', default=None, type=str, help='Execute a single spider by its configuration file')
+def skyscraper2(daemon, spider_file):
+    if not daemon and not spider_file:
+        click.echo('Use either --daemon or --spider', err=True)
+        return
+    elif daemon and spider_file is not None:
+        click.echo('--daemon and --spider are mutually exclusive', err=True)
         return
 
-    path, filename = os.path.split(os.path.realpath(yml_file))
-    path, spiderfolder = os.path.split(path)
+    if spider_file:
+        if not os.path.isfile(spider_file):
+            click.echo('YAML file does not exist')
+            return
 
-    namespace = spiderfolder
-    spider, _ = os.path.splitext(filename)
+        folder = skyscraper.settings.SKYSCRAPER_STORAGE_FOLDER_PATH
 
-    click.echo('Executing spider %s/%s.' % (namespace, spider))
+        # TODO: Move this code somewhere else so that this function becomes
+        # shorter
+        path, filename = os.path.split(os.path.realpath(spider_file))
+        path, spiderfolder = os.path.split(path)
 
-    with open(yml_file) as f:
-        config = skyscraper.config.load(f, namespace, spider)
+        namespace = spiderfolder
+        spider, _ = os.path.splitext(filename)
 
-    runner = skyscraper.execution.SkyscraperSpiderRunner(folder, proxy)
-    runner.run(config)
+        click.echo('Executing spider %s/%s.' % (namespace, spider))
+
+        with open(spider_file) as f:
+            config = skyscraper.config.load(f, namespace, spider)
+
+        # TODO: Read proxy variable
+        runner = skyscraper.execution.SkyscraperSpiderRunner(folder, None)
+        runner.run(config)
+    elif daemon:
+        click.echo('Daemon mode not implemented, yet')
 
 
 @click.command()
