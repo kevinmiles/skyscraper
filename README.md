@@ -24,10 +24,10 @@ python -m skyscraper --daemon
 To run a single spider manually use
 
 ```bash
-python -m skyscraper --spider SPIDER.yml
+python -m skyscraper --spider spider.yml
 ```
 
-with `SPIDER.yml` being the path to your spiders YAML configuration file.
+with `spider.yml` being the path to your spider's YAML configuration file.
 
 
 ## TODO
