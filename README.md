@@ -45,3 +45,8 @@ with `spider.yml` being the path to your spider's YAML configuration file.
   requests; and `SkyscraperCrawler` to execute the logic (which will use one
   of the two engines); `SkyscraperRunner` will execute all spiders (daemon
   mode)
+* add a `--verbose` mode which outputs current URL, found items, found links
+* use relative imports
+* use requests `Session` to manage cookies (handle cookies in a wrapper
+  layer which is the same for all engines, so that e.g. a switch between
+  Chrome engine and file downloader uses the same cookies)
