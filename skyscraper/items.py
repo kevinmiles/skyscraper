@@ -23,3 +23,21 @@ class BasicItem(scrapy.Item):
     crawl_time = scrapy.Field()
     spider = scrapy.Field()
     namespace = scrapy.Field()
+
+
+class Item(dict):
+    def __init__(self, namespace, spider, **kwargs):
+        self.namespace = namespace
+        self.spider = spider
+        self.url = kwargs.get('url', '')
+        self.source = kwargs.get('source', '')
+        self.data = kwargs.get('data', {})
+
+
+class DownloadItem:
+    def __init__(self, namespace, spider, **kwargs):
+        self.namespace = namespace
+        self.spider = spider
+        self.url = kwargs.get('url', '')
+        self.bytes = kwargs.get('bytes', '')
+        self.extension = kwargs.get('extension', '')

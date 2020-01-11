@@ -5,8 +5,10 @@ rules:
   start_urls:
     stores_item: false
     follow:
-      - selector: '#mp-left a'
+      - selector: '#mp-left a::attr(href)'
         next: article_urls
+    download:
+      - selector: 'img::attr(src)'
   article_urls:
     extract:
       # Extract structured data with these selectors and stores them to the

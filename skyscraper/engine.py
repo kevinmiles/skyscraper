@@ -18,12 +18,20 @@ class AbstractEngine(abc.ABC):
     def perform_request(self, request: Request) -> Response:
         pass
 
+    @abc.abstractmethod
+    def perform_download(self, url: str) -> bytes:
+        pass
+
 
 class RequestsEngine(AbstractEngine):
     def perform_request(self, request: Request) -> Response:
         # TODO: Support other methods than GET
         response = requests.get(request.url)
         return Response(response.url, response.text)
+
+    def perform_download(self, url: str) -> bytes:
+        response = requests.get(url)
+        return response.content
 
 
 def make_engine(name):

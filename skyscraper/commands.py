@@ -146,7 +146,8 @@ def skyscraper2(daemon, spider_file):
             click.echo('YAML file does not exist')
             return
 
-        folder = skyscraper.settings.SKYSCRAPER_STORAGE_FOLDER_PATH
+        items_folder = skyscraper.settings.SKYSCRAPER_STORAGE_FOLDER_PATH
+        downloads_folder = skyscraper.settings.SKYSCRAPER_STORAGE_DOWNLOADS_PATH
 
         # TODO: Move this code somewhere else so that this function becomes
         # shorter
@@ -162,9 +163,10 @@ def skyscraper2(daemon, spider_file):
             config = skyscraper.config.load(f, namespace, spider)
 
         # TODO: Read proxy variable
+        storage = skyscraper.storage.JsonStorage(items_folder, downloads_folder)
         crawler_engine = engine.make_engine(config.engine)
         crawler = skyscraper.execution.SkyscraperCrawler(crawler_engine)
-        runner = skyscraper.execution.SkyscraperSpiderRunner(folder, crawler)
+        runner = skyscraper.execution.SkyscraperSpiderRunner(storage, crawler)
         runner.run(config)
     elif daemon:
         click.echo('Daemon mode not implemented, yet')

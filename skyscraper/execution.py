@@ -11,6 +11,7 @@ import requests
 import pyppeteer.errors
 from lxml import html
 import urllib.parse
+import re
 
 import skyscraper.items
 import skyscraper.storage
@@ -101,10 +102,10 @@ class SkyscraperRunner(object):
 
 
 class SkyscraperSpiderRunner(object):
-    def __init__(self, storage_folder, crawler):
+    def __init__(self, storage, crawler):
         self.crawler = crawler
         self.items = []
-        self.storage = skyscraper.storage.JsonStorage(storage_folder)
+        self.storage = storage
 
     def run(self, config):
         for item in self.crawler.crawl(config):
@@ -112,6 +113,10 @@ class SkyscraperSpiderRunner(object):
 
 
 class AbstractCrawler(abc.ABC):
+    """Crawlers implement the logic which should be used to
+    follow URLs, extract information etc. It does not perform the actual
+    request, instead it relies on a crawling engine to achieve this."""
+
     def __init__(self, engine: AbstractEngine):
         self.engine = engine
 
@@ -121,9 +126,9 @@ class AbstractCrawler(abc.ABC):
 
 
 class SkyscraperCrawler(AbstractCrawler):
-    """Skyscraper crawler implements the logic which should be used to
-    follow URLs, extract information etc. It does not perform the actual
-    request, instead it relies on a crawling engine to achieve this."""
+    """Skyscraper crawler is the built-in crawler that uses a YML configuration
+    file to define which sites should be crawled and what information should
+    be extracted."""
 
     def __init__(self, engine: AbstractEngine):
         self.engine = engine
@@ -139,18 +144,30 @@ class SkyscraperCrawler(AbstractCrawler):
             response = self.engine.perform_request(Request(url))
 
             if self._stores_items(rule_id, config.rules):
-                item = {
-                    'url': response.url,
-                    'namespace': config.project,
-                    'spider': config.spider,
-                    'data': self._run_extractors(
-                        rule_id, config.rules, response.text),
-                }
+                data = self._run_extractors(rule_id, config.rules, response.text)
+                item = skyscraper.items.Item(
+                    config.project, config.spider,
+                    url=response.url,
+                    data=data)
 
                 if rule_id in config.rules \
                         and 'source' in config.rules[rule_id] \
                         and config.rules[rule_id]['source']:
-                    item['source'] = response.text
+                    item.source = response.text
+
+                yield item
+
+            for url in self._run_downloads(rule_id, config.rules, response.text):
+                url = urllib.parse.urljoin(response.url, url)
+                content = self.engine.perform_download(url)
+
+                item = skyscraper.items.DownloadItem(
+                    config.project, config.spider, bytes=content)
+
+                # TODO: is this heuristics to detect file type OK?
+                m = re.match(r'.+\.(\w{2,4})', url)
+                if m:
+                    item.extension = m[1]
 
                 yield item
 
@@ -166,11 +183,21 @@ class SkyscraperCrawler(AbstractCrawler):
             tree = html.fromstring(content)
 
             for extractor in rules[rule_id]['extract']:
-                data[extractor['field']] = list(map(
-                    lambda x: x.text_content(),
-                    tree.cssselect(extractor['selector'])))
+                data[extractor['field']] = self._execute_selector(
+                    extractor['selector'], tree)
 
         return data
+
+    def _run_downloads(self, rule_id, rules, content):
+        urls = []
+
+        if rule_id in rules and 'download' in rules[rule_id]:
+            tree = html.fromstring(content)
+
+            for extractor in rules[rule_id]['download']:
+                urls += self._execute_selector(extractor['selector'], tree)
+
+        return urls
 
     def _run_follows(self, rule_id, rules, content):
         links = []
@@ -181,10 +208,31 @@ class SkyscraperCrawler(AbstractCrawler):
             for extractor in rules[rule_id]['follow']:
                 next_level = extractor['next']
 
-                for url in tree.cssselect(extractor['selector']):
-                    links.append((next_level, url.get('href')))
+                for url in self._execute_selector(extractor['selector'], tree):
+                    links.append((next_level, url))
 
         return links
+
+    def _execute_selector(self, selector, tree):
+        base_selector, _, pseudoclass = selector.partition('::')
+
+        elements = tree.cssselect(base_selector)
+        return list(map(lambda elem: self._apply_pseudoclass(pseudoclass, elem), elements))
+
+    def _apply_pseudoclass(self, pseudoclass, elem):
+        if not pseudoclass:
+            return elem.text_content()
+        else:
+            m = re.match(r'([\w-]+)(?:\(([\w-]+)\))?', pseudoclass)
+            if not m:
+                raise ValueError('Invalid pseudoclass "{}", could not parse'.format(pseudoclass))
+            else:
+                if m[1] == 'attr':
+                    return elem.get(m[2])
+                elif m[1] == 'text':
+                    return elem.text_content()
+                else:
+                    raise ValueError('Unknown pseudoclass "{}"'.format(pseudoclass))
 
     def _stores_items(self, rule_id, rules):
         if rule_id not in rules:

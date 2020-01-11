@@ -54,6 +54,9 @@ if os.environ.get('SKYSCRAPER_PIPELINE_USE_OUTPUT_FOLDER') \
     SKYSCRAPER_STORAGE_FOLDER_PATH = os.environ.get(
         'SKYSCRAPER_STORAGE_FOLDER_PATH',
         default=local_storage)
+    SKYSCRAPER_STORAGE_DOWNLOADS_PATH = os.environ.get(
+        'SKYSCRAPER_STORAGE_DOWNLOADS_PATH',
+        default=local_storage)
 
 if os.environ.get('SKYSCRAPER_CHROME_NO_SANDBOX'):
     SKYSCRAPER_CHROME_NO_SANDBOX = bool(os.environ.get('SKYSCRAPER_CHROME_NO_SANDBOX'))

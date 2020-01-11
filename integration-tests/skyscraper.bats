@@ -44,9 +44,11 @@ teardown() {
 
 @test "crawl wikipedia articles with configuration yml" {
     python -m skyscraper --spider integration-tests/spiders/test/wikipedia.yml
-    count=$(ls /tmp/skyscraper-integration-tests/items/test/wikipedia/ | wc -l)
+    count_articles=$(ls /tmp/skyscraper-integration-tests/items/test/wikipedia/ | wc -l)
+    count_images=$(ls /tmp/skyscraper-integration-tests/downloads/test/wikipedia/ | wc -l)
 
-    [ "$count" -gt 1 ]
+    [ "$count_articles" -gt 1 ]
+    [ "$count_images" -ge 1 ]
 }
 
 @test "crawl example.com with Chrome headless from git" {
