@@ -50,13 +50,16 @@ if os.environ.get('SKYSCRAPER_PIPELINE_USE_OUTPUT_FOLDER') \
         and int(os.environ.get('SKYSCRAPER_PIPELINE_USE_OUTPUT_FOLDER')):
     ITEM_PIPELINES['skyscraper.pipelines.filesystem.SaveDataToFolderPipeline'] = 300
 
-    local_storage = os.path.join(os.getcwd(), 'results')
-    SKYSCRAPER_STORAGE_FOLDER_PATH = os.environ.get(
-        'SKYSCRAPER_STORAGE_FOLDER_PATH',
-        default=local_storage)
-    SKYSCRAPER_STORAGE_DOWNLOADS_PATH = os.environ.get(
-        'SKYSCRAPER_STORAGE_DOWNLOADS_PATH',
-        default=local_storage)
+# These variables must always be set, not only when SKYSCRAPER_PIPELINE_USE_OUTPUT_FOLDER
+# is active. The PIPELINE setting enabled the Scrapy pipeline, but the
+# storage paths are also used for non-scrapy spiders
+local_storage = os.path.join(os.getcwd(), 'results')
+SKYSCRAPER_STORAGE_FOLDER_PATH = os.environ.get(
+    'SKYSCRAPER_STORAGE_FOLDER_PATH',
+    default=local_storage)
+SKYSCRAPER_STORAGE_DOWNLOADS_PATH = os.environ.get(
+    'SKYSCRAPER_STORAGE_DOWNLOADS_PATH',
+    default=local_storage)
 
 if os.environ.get('SKYSCRAPER_CHROME_NO_SANDBOX'):
     SKYSCRAPER_CHROME_NO_SANDBOX = bool(os.environ.get('SKYSCRAPER_CHROME_NO_SANDBOX'))

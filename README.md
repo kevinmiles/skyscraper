@@ -29,6 +29,14 @@ python -m skyscraper --spider spider.yml
 
 with `spider.yml` being the path to your spider's YAML configuration file.
 
+Set the following environment variables to define where scraped data and
+downloaded files should be stored:
+
+```
+SKYSCRAPER_STORAGE_FOLDER_PATH=/data/skyscraper=items
+SKYSCRAPER_STORAGE_DOWNLOADS_PATH=/data/skyscraper-downloads
+```
+
 
 ## TODO
 
@@ -41,10 +49,6 @@ with `spider.yml` being the path to your spider's YAML configuration file.
 * Configurable with:
   * URL
   * Selector to follow -> if new, load and possibly download a file
-* Implement a `RequestsEngine` and a `ChromeEngine` to perform the GET
-  requests; and `SkyscraperCrawler` to execute the logic (which will use one
-  of the two engines); `SkyscraperRunner` will execute all spiders (daemon
-  mode)
 * add a `--verbose` mode which outputs current URL, found items, found links
 * use relative imports
 * use requests `Session` to manage cookies (handle cookies in a wrapper
