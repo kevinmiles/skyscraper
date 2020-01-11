@@ -1,3 +1,4 @@
+import abc
 import os
 import subprocess
 import datetime
@@ -13,6 +14,7 @@ import urllib.parse
 
 import skyscraper.items
 import skyscraper.storage
+from .engine import AbstractEngine, Request
 
 from scrapy.exceptions import DropItem
 from scrapy.crawler import CrawlerProcess
@@ -99,20 +101,42 @@ class SkyscraperRunner(object):
 
 
 class SkyscraperSpiderRunner(object):
-    def __init__(self, storage_folder, http_proxy):
-        self.http_proxy = http_proxy
-        self.backlog = []
+    def __init__(self, storage_folder, crawler):
+        self.crawler = crawler
         self.items = []
         self.storage = skyscraper.storage.JsonStorage(storage_folder)
 
     def run(self, config):
+        for item in self.crawler.crawl(config):
+            self.storage.store_item(item)
+
+
+class AbstractCrawler(abc.ABC):
+    def __init__(self, engine: AbstractEngine):
+        self.engine = engine
+
+    @abc.abstractmethod
+    def crawl(self, config):
+        pass
+
+
+class SkyscraperCrawler(AbstractCrawler):
+    """Skyscraper crawler implements the logic which should be used to
+    follow URLs, extract information etc. It does not perform the actual
+    request, instead it relies on a crawling engine to achieve this."""
+
+    def __init__(self, engine: AbstractEngine):
+        self.engine = engine
+        self.backlog = []
+
+    def crawl(self, config):
         for url in config.start_urls:
             self.backlog.append(('start_urls', url))
 
         while len(self.backlog):
             rule_id, url = self.backlog.pop()
 
-            response = requests.get(url)
+            response = self.engine.perform_request(Request(url))
 
             if self._stores_items(rule_id, config.rules):
                 item = {
@@ -128,7 +152,7 @@ class SkyscraperSpiderRunner(object):
                         and config.rules[rule_id]['source']:
                     item['source'] = response.text
 
-                self.storage.store_item(item)
+                yield item
 
             for f in self._run_follows(rule_id, config.rules, response.text):
                 level = f[0]

@@ -36,14 +36,14 @@ teardown() {
 }
 
 @test "crawl example.com with configuration yml" {
-    skyscraper-spider-yml --yml-file integration-tests/spiders/test/examplecom.yml --folder /tmp/skyscraper-integration-tests/items
+    python -m skyscraper --spider integration-tests/spiders/test/examplecom.yml
     count=$(ls /tmp/skyscraper-integration-tests/items/test/examplecom/ | wc -l)
 
     [ "$count" -eq 1 ]
 }
 
 @test "crawl wikipedia articles with configuration yml" {
-    skyscraper-spider-yml --yml-file integration-tests/spiders/test/wikipedia.yml --folder /tmp/skyscraper-integration-tests/items
+    python -m skyscraper --spider integration-tests/spiders/test/wikipedia.yml
     count=$(ls /tmp/skyscraper-integration-tests/items/test/wikipedia/ | wc -l)
 
     [ "$count" -gt 1 ]

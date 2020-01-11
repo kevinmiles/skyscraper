@@ -16,6 +16,7 @@ import skyscraper.mail
 import skyscraper.settings
 import skyscraper.spiderloader
 import skyscraper.instrumentation
+from . import engine
 
 
 @click.command()
@@ -161,7 +162,9 @@ def skyscraper2(daemon, spider_file):
             config = skyscraper.config.load(f, namespace, spider)
 
         # TODO: Read proxy variable
-        runner = skyscraper.execution.SkyscraperSpiderRunner(folder, None)
+        crawler_engine = engine.make_engine(config.engine)
+        crawler = skyscraper.execution.SkyscraperCrawler(crawler_engine)
+        runner = skyscraper.execution.SkyscraperSpiderRunner(folder, crawler)
         runner.run(config)
     elif daemon:
         click.echo('Daemon mode not implemented, yet')
