@@ -16,6 +16,7 @@ import re
 import skyscraper.items
 import skyscraper.storage
 from .engine import AbstractEngine, Request
+from .config import Configuration
 
 from scrapy.exceptions import DropItem
 from scrapy.crawler import CrawlerProcess
@@ -99,17 +100,6 @@ class SkyscraperRunner(object):
         except KeyError:
             # spider was removed, do not schedule again
             pass
-
-
-class SkyscraperSpiderRunner(object):
-    def __init__(self, storage, crawler):
-        self.crawler = crawler
-        self.items = []
-        self.storage = storage
-
-    def run(self, config):
-        for item in self.crawler.crawl(config):
-            self.storage.store_item(item)
 
 
 class AbstractCrawler(abc.ABC):
@@ -214,25 +204,45 @@ class SkyscraperCrawler(AbstractCrawler):
         return links
 
     def _execute_selector(self, selector, tree):
-        base_selector, _, pseudoclass = selector.partition('::')
+        parts = selector.split('::')
+        base_selector = parts[0]
+        pseudoclasses = parts[1:]
 
         elements = tree.cssselect(base_selector)
-        return list(map(lambda elem: self._apply_pseudoclass(pseudoclass, elem), elements))
 
-    def _apply_pseudoclass(self, pseudoclass, elem):
-        if not pseudoclass:
-            return elem.text_content()
+        # TODO: Improve the pseudoclass feature heavily, because it's not really clean now
+        elements = list(map(lambda elem: self._apply_pseudoclass(pseudoclasses, elem), elements))
+
+        if 'first' in pseudoclasses:
+            return elements[0] if len(elements) else None
+        elif 'last' in pseudoclasses:
+            return elements[-1] if len(elements) else None
         else:
+            return elements
+
+    def _apply_pseudoclass(self, pseudoclasses, elem):
+        representation_done = False
+
+        for pseudoclass in pseudoclasses:
             m = re.match(r'([\w-]+)(?:\(([\w-]+)\))?', pseudoclass)
             if not m:
                 raise ValueError('Invalid pseudoclass "{}", could not parse'.format(pseudoclass))
             else:
                 if m[1] == 'attr':
-                    return elem.get(m[2])
+                    representation_done = True
+                    elem = elem.get(m[2])
                 elif m[1] == 'text':
-                    return elem.text_content()
+                    representation_done = True
+                    elem = elem.text_content()
+                elif m[1] in ['first', 'last']:
+                    # first and last implemented outside of this function
+                    # TODO: clean this mess up
+                    pass
                 else:
                     raise ValueError('Unknown pseudoclass "{}"'.format(pseudoclass))
+
+        if not representation_done:
+            return elem.text_content()
 
     def _stores_items(self, rule_id, rules):
         if rule_id not in rules:
@@ -244,7 +254,24 @@ class SkyscraperCrawler(AbstractCrawler):
             return rules[rule_id]['store_item']
 
 
-class ScrapySpiderRunner(object):
+class AbstractSpiderRunner(abc.ABC):
+    @abc.abstractmethod
+    def run(self, config: Configuration):
+        pass
+
+
+class SkyscraperSpiderRunner(AbstractSpiderRunner):
+    def __init__(self, storage, crawler):
+        self.crawler = crawler
+        self.items = []
+        self.storage = storage
+
+    def run(self, config: Configuration):
+        for item in self.crawler.crawl(config):
+            self.storage.store_item(item)
+
+
+class ScrapySpiderRunner(AbstractSpiderRunner):
     """This class is a runner to help with the execution of spiders with
     a given configuration. It sets up the environment and configurations
     and then executes the spider.
@@ -252,36 +279,20 @@ class ScrapySpiderRunner(object):
     def __init__(self, http_proxy):
         self.http_proxy = http_proxy
 
-    def run_standalone(self, namespace, spider, options={}):
-        command = [
-            'skyscraper-spider',
-            namespace,
-            spider,
-        ]
-
-        if 'tor' in options and options['tor']:
-            command.append('--use-tor')
-
-        subprocess.Popen(command)
-
-    def run(self, namespace, spider, semaphore=None, options={}):
+    def run(self, config: Configuration):
         """Run the given spider with the defined options. Will block
         until the spider has finished.
         """
-        if not self._acquire_run_lock(semaphore):
-            return
-
-        if 'tor' in options and options['tor']:
+        if config.use_tor:
             self._set_proxy_tor()
 
         # Start the spider in this process
         settings = get_project_settings()
-        settings['USER_NAMESPACE'] = namespace
-        process = CrawlerProcess(settings)
-        process.crawl(spider)
-        process.start()
+        settings['USER_NAMESPACE'] = config.project
 
-        self._release_run_lock(semaphore)
+        process = CrawlerProcess(settings)
+        process.crawl(config.spider)
+        process.start()
 
     def _set_proxy_tor(self):
         if not self.http_proxy:
@@ -293,20 +304,6 @@ class ScrapySpiderRunner(object):
         # sets it?
         os.environ['http_proxy'] = 'http://{}'.format(self.http_proxy)
         os.environ['https_proxy'] = 'https://{}'.format(self.http_proxy)
-
-    def _acquire_run_lock(self, semaphore):
-        if not semaphore:
-            return True
-        else:
-            try:
-                semaphore.acquire()
-                return True
-            except Exception:
-                return False
-
-    def _release_run_lock(self, semaphore):
-        if semaphore:
-            semaphore.release()
 
 
 class ChromeCrawler(object):
@@ -397,51 +394,3 @@ class ChromeSpiderRunner(object):
             return pipeline_class.from_crawler(crawler)
         else:
             return pipeline_class()
-
-
-class Semaphore(object):
-    def __init__(self, conn, namespace, spider):
-        self.conn = conn
-        self.namespace = namespace
-        self.spider = spider
-        self.timeout_minutes = 60
-
-    def acquire(self):
-        c = self.conn.cursor()
-        c.execute('''UPDATE skyscraper_spiders
-            SET blocked_from_running_until = NOW() at time zone 'utc'
-                + INTERVAL '%s minutes'
-            -- fail if somebody else blocked it
-            WHERE (
-                blocked_from_running_until IS NULL
-                OR blocked_from_running_until < NOW() at time zone 'utc'
-            )
-            AND name = %s
-            AND project_id IN (
-                SELECT project_id FROM projects WHERE name = %s
-            )''',
-            (self.timeout_minutes, self.spider, self.namespace))
-        self.conn.commit()
-
-        if c.rowcount == 0:
-            raise Exception('Could not acquire lock')
-
-    def locked(self):
-        c = self.conn.cursor()
-        c.execute('''SELECT COUNT(*) FROM skyscraper_spiders s
-            JOIN projects p ON s.project_id = p.project_id
-            WHERE blocked_from_running_until >= NOW() at time zone 'utc'
-            AND s.name = %s
-            AND p.name = %s''', (self.spider, self.namespace))
-        row = c.fetchone()
-        return row is not None
-
-    def release(self):
-        c = self.conn.cursor()
-        c.execute('''UPDATE skyscraper_spiders
-            SET blocked_from_running_until = NULL
-            WHERE name = %s
-            AND project_id IN (
-                SELECT project_id FROM projects WHERE name = %s
-            )''', (self.spider, self.namespace))
-        self.conn.commit()

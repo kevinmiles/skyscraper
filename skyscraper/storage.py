@@ -23,7 +23,7 @@ class JsonStorage(object):
             filepath = os.path.join(destination_folder, filename)
 
             with open(filepath, 'w+') as f:
-                f.write(json.dumps(item))
+                f.write(json.dumps(item.__dict__))
 
         elif isinstance(item, DownloadItem):
             if item.extension:

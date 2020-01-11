@@ -1,0 +1,4 @@
+engine: scrapy
+enabled: true
+recurrence_minutes: null
+use_tor: false

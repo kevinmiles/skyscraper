@@ -1,12 +1,7 @@
 import os
 import subprocess
-import importlib
-import inspect
-import scrapy
-import logging
 
-import skyscraper.config
-import skyscraper.spiders
+from . import config
 
 
 class RepositoryException(Exception):
@@ -44,39 +39,12 @@ class DeclarativeRepository(object):
         configfile = os.path.join(self.spiderdir, project, spider + '.yml')
 
         with open(configfile, 'r') as f:
-            return skyscraper.config.load(f, project, spider)
+            return config.load(f, project, spider)
 
     def get_all_configs(self):
         configs = [self.get_config(project, spider)
                    for project, spider in self.iterate_spiders()]
         return configs
-
-    def load_spider(self, project, spider):
-        spiderfile = os.path.join(self.spiderdir, project, spider + '.py')
-
-        spec = importlib.util.spec_from_file_location(
-            'skyscraper.spiders.{}.{}'.format(project, spider), spiderfile)
-        dynamicspider = importlib.util.module_from_spec(spec)
-
-        try:
-            spec.loader.exec_module(dynamicspider)
-        except FileNotFoundError:
-            raise KeyError('Spider not found: {}/{}'.format(project, spider))
-
-        # extract the first class that is a child of skyscraper.spiders.ChromeSpider
-        # or scrapy.Spider
-        for name, obj in inspect.getmembers(dynamicspider):
-            if inspect.isclass(obj) \
-                    and (issubclass(obj, skyscraper.spiders.ChromeSpider) \
-                    or issubclass(obj, scrapy.Spider)):
-                if obj.name != spider:
-                    logging.warn('Name attribute of spider {}/{} does not '
-                                 + 'match its file name')
-                else:
-                    return obj
-
-        raise KeyError(
-            'Spider not found: {}/{}'.format(project, spider))
 
     def update(self):
         # If the folder is empty, clone the repository

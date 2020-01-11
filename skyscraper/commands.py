@@ -163,11 +163,17 @@ def skyscraper2(daemon, spider_file):
             config = skyscraper.config.load(f, namespace, spider)
 
         # TODO: Read proxy variable
-        storage = skyscraper.storage.JsonStorage(items_folder, downloads_folder)
-        crawler_engine = engine.make_engine(config.engine)
-        crawler = skyscraper.execution.SkyscraperCrawler(crawler_engine)
-        runner = skyscraper.execution.SkyscraperSpiderRunner(storage, crawler)
-        runner.run(config)
+        if config.engine == 'scrapy':
+            # scrapy is not a real engine in our system, it's a different scraping mode,
+            # thus we cannot create it with make_engine()
+            runner = skyscraper.execution.ScrapySpiderRunner(None)
+            runner.run(config)
+        else:
+            storage = skyscraper.storage.JsonStorage(items_folder, downloads_folder)
+            crawler_engine = engine.make_engine(config.engine)
+            crawler = skyscraper.execution.SkyscraperCrawler(crawler_engine)
+            runner = skyscraper.execution.SkyscraperSpiderRunner(storage, crawler)
+            runner.run(config)
     elif daemon:
         click.echo('Daemon mode not implemented, yet')
 

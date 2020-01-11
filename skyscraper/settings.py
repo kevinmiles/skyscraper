@@ -72,15 +72,19 @@ else:
 AWS_ACCESS_KEY = os.environ.get('SKYSCRAPER_AWS_ACCESS_KEY')
 AWS_SECRET_ACCESS_KEY = os.environ.get('SKYSCRAPER_AWS_SECRET_ACCESS_KEY')
 
-if os.environ.get('SKYSCRAPER_SPIDER_LOADER_CLASS'):
-    SPIDER_LOADER_CLASS = os.environ.get('SKYSCRAPER_SPIDER_LOADER_CLASS')
-else:
-    SPIDER_LOADER_CLASS = 'skyscraper.spiderloader.GitSpiderLoader'
-
 DYNAMODB_CRAWLING_INDEX = os.environ.get('SKYSCRAPER_DYNAMODB_CRAWLING_INDEX')
 DYNAMODB_CRAWLING_OPTIONS = os.environ.get('SKYSCRAPER_DYNAMODB_CRAWLING_OPTIONS')
 
+# Spider management
 GIT_REPOSITORY = os.environ.get('SKYSCRAPER_GIT_REPOSITORY')
 GIT_WORKDIR = os.environ.get('SKYSCRAPER_GIT_WORKDIR')
 GIT_SUBFOLDER = os.environ.get('SKYSCRAPER_GIT_SUBFOLDER')
 GIT_BRANCH = os.environ.get('SKYSCRAPER_GIT_BRANCH')
+
+SPIDER_LOADER_CLASS = 'skyscraper.spiderloader.FolderSpiderLoader'
+# Fixed spider folder, e.g. for testing
+# In daemon mode this will be set to the git directory
+if os.environ.get('SKYSCRAPER_SPIDERS_FOLDER'):
+    SPIDERS_FOLDER = os.environ.get('SKYSCRAPER_SPIDERS_FOLDER')
+else:
+    SPIDERS_FOLDER = GIT_WORKDIR

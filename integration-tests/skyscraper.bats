@@ -28,9 +28,9 @@ teardown() {
     [ "$count_chrome" -ge 1 ]
 }
 
-@test "crawl example.com with spider from git" {
-    skyscraper-spider onetime_spiders example
-    count=$(ls /tmp/skyscraper-integration-tests/items/onetime_spiders/example/ | wc -l)
+@test "crawl example.com with scrapy spider" {
+    python -m skyscraper --spider integration-tests/spiders/scrapy/example.yml
+    count=$(ls /tmp/skyscraper-integration-tests/items/scrapy/example/ | wc -l)
 
     [ "$count" -eq 1 ]
 }
@@ -51,11 +51,13 @@ teardown() {
     [ "$count_images" -ge 1 ]
 }
 
-@test "crawl example.com with Chrome headless from git" {
-    skyscraper-spider chrome_headless example --engine chrome
-    count=$(ls /tmp/skyscraper-integration-tests/items/chrome_headless/example/ | wc -l)
+@test "crawl example.com with Chrome headless" {
+    python -m skyscraper --spider integration-tests/spiders/chrome/examplecom.yml
+    count=$(ls /tmp/skyscraper-integration-tests/items/chrome/examplecom/ | wc -l)
+    title=$(cat /tmp/skyscraper-integration-tests/items/chrome/examplecom/*.json | jq -r ".data.title")
 
     [ "$count" -eq 1 ]
+    [ "$title" = "Example Domain" ]
 }
 
 @test "check TOR has different IP" {

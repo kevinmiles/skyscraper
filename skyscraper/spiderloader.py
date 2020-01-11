@@ -6,47 +6,6 @@ from scrapy.interfaces import ISpiderLoader
 from scrapy.utils.misc import walk_modules
 from scrapy.utils.spider import iter_spider_classes
 
-import importlib
-import scrapy
-import inspect
-import subprocess
-
-from skyscraper.git import DeclarativeRepository
-
-
-@implementer(ISpiderLoader)
-class GitSpiderLoader(object):
-    """Reads spiders from a git repository"""
-
-    def __init__(self, git_repo, namespace=None):
-        self.git_repo = git_repo
-        self.namespace_from_settings = namespace
-
-    @classmethod
-    def from_settings(cls, settings):
-        git_repo = DeclarativeRepository(
-            settings.get('GIT_REPOSITORY'),
-            settings.get('GIT_WORKDIR'),
-            subfolder=settings.get('GIT_SUBFOLDER'),
-            branch=settings.get('GIT_BRANCH')
-        )
-
-        namespace = settings.get('USER_NAMESPACE')
-
-        return cls(git_repo, namespace)
-
-    def load(self, spider_name, namespace=None):
-        if namespace is None:
-            namespace = self.namespace_from_settings
-
-        return self.git_repo.load_spider(namespace, spider_name)
-
-    def find_by_request(self, request):
-        pass
-
-    def list(self):
-        pass
-
 
 @implementer(ISpiderLoader)
 class FolderSpiderLoader(object):
