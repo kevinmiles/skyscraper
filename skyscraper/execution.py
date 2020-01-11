@@ -149,10 +149,10 @@ class SkyscraperCrawler(AbstractCrawler):
 
                 yield item
 
-            for url in self._run_downloads(rule_id, config.rules, response.text):
+            for download in self._run_downloads(rule_id, config.rules, response.text):
                 self._wait_randomized(settings.DOWNLOAD_DELAY)
 
-                url = urllib.parse.urljoin(response.url, url)
+                url = urllib.parse.urljoin(response.url, download['url'])
                 content = self.engine.perform_download(url)
 
                 item = skyscraper.items.DownloadItem(
@@ -160,7 +160,9 @@ class SkyscraperCrawler(AbstractCrawler):
 
                 # TODO: is this heuristics to detect file type OK?
                 m = re.match(r'.+\.(\w{2,4})', url)
-                if m:
+                if download['extension']:
+                    item.extension = download['extension']
+                elif m:
                     item.extension = m[1]
 
                 yield item
@@ -191,7 +193,10 @@ class SkyscraperCrawler(AbstractCrawler):
             tree = html.fromstring(content)
 
             for extractor in rules[rule_id]['download']:
-                urls += self._execute_selector(extractor['selector'], tree)
+                for url in self._execute_selector(extractor['selector'], tree):
+                    extension = extractor.get('extension', None)
+                    if url:
+                        urls.append({'url': url, 'extension': extension})
 
         return urls
 
