@@ -24,7 +24,7 @@ else:
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
-DOWNLOAD_DELAY = 0.1
+DOWNLOAD_DELAY = os.environ.get('SKYSCRAPER_DOWNLOAD_DELAY', 0.1)
 
 
 ITEM_PIPELINES = {

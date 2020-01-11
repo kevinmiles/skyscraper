@@ -7,16 +7,18 @@ import collections
 import logging
 import prometheus_client
 import scrapy
-import requests
 import pyppeteer.errors
 from lxml import html
 import urllib.parse
 import re
+import random
+import time
 
 import skyscraper.items
 import skyscraper.storage
 from .engine import AbstractEngine, Request
 from .config import Configuration
+from . import settings
 
 from scrapy.exceptions import DropItem
 from scrapy.crawler import CrawlerProcess
@@ -165,6 +167,11 @@ class SkyscraperCrawler(AbstractCrawler):
                 level = f[0]
                 url = urllib.parse.urljoin(response.url, f[1])
                 self.backlog.append((level, url))
+
+            # wait a randomized time
+            delay_setpoint = settings.DOWNLOAD_DELAY
+            delay = random.uniform(delay_setpoint * 0.5, delay_setpoint * 1.5)
+            time.sleep(delay)
 
     def _run_extractors(self, rule_id, rules, content):
         data = {}

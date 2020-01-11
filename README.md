@@ -37,6 +37,14 @@ SKYSCRAPER_STORAGE_FOLDER_PATH=/data/skyscraper=items
 SKYSCRAPER_STORAGE_DOWNLOADS_PATH=/data/skyscraper-downloads
 ```
 
+To have a delay between subsequent requests, set the following environment
+variable to the number of seconds you want to wait. The actual wait time will
+be between 50% and 150% of the given value.
+
+```
+SKYSCRAPER_DOWNLOAD_DELAY=5
+```
+
 
 ## TODO
 
