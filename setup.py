@@ -33,6 +33,7 @@ setup(
         'beautifulsoup4',
         'html5lib',
         'requests',
+        'cloudscraper',
     ],
     extras_require=extras,
     entry_points='''

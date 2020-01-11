@@ -3,6 +3,7 @@ import abc
 import requests
 import asyncio
 import pyppeteer
+import cloudscraper
 
 
 class Request:
@@ -30,13 +31,22 @@ class AbstractEngine(abc.ABC):
 
 
 class RequestsEngine(AbstractEngine):
+    def __init__(self, use_cloudscraper=False):
+        if use_cloudscraper:
+            print('using cloudscraper')
+            self.r = cloudscraper.create_scraper()
+        else:
+            self.r = requests.Session()
+
     def perform_request(self, request: Request) -> Response:
         # TODO: Support other methods than GET
-        response = requests.get(request.url)
+        print(request.url)
+        response = self.r.get(request.url)
+        print(response.text)
         return Response(response.url, response.text)
 
     def perform_download(self, url: str) -> bytes:
-        response = requests.get(url)
+        response = self.r.get(url)
         return response.content
 
 
@@ -74,12 +84,11 @@ class ChromeEngine(AbstractEngine):
 
 
 def make_engine(name):
-    engines = {
-        'requests': RequestsEngine,
-        'chrome': ChromeEngine,
-    }
-
-    if name in engines:
-        return engines[name]()
+    if name == 'chrome':
+        return ChromeEngine()
+    elif name == 'requests':
+        return RequestsEngine()
+    elif name == 'cloudscraper':
+        return RequestsEngine(use_cloudscraper=True)
     else:
         raise ValueError('No such engine "{}"'.format(name))
