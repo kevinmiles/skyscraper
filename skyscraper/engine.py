@@ -33,16 +33,13 @@ class AbstractEngine(abc.ABC):
 class RequestsEngine(AbstractEngine):
     def __init__(self, use_cloudscraper=False):
         if use_cloudscraper:
-            print('using cloudscraper')
             self.r = cloudscraper.create_scraper()
         else:
             self.r = requests.Session()
 
     def perform_request(self, request: Request) -> Response:
         # TODO: Support other methods than GET
-        print(request.url)
         response = self.r.get(request.url)
-        print(response.text)
         return Response(response.url, response.text)
 
     def perform_download(self, url: str) -> bytes:

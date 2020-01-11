@@ -150,6 +150,8 @@ class SkyscraperCrawler(AbstractCrawler):
                 yield item
 
             for url in self._run_downloads(rule_id, config.rules, response.text):
+                self._wait_randomized(settings.DOWNLOAD_DELAY)
+
                 url = urllib.parse.urljoin(response.url, url)
                 content = self.engine.perform_download(url)
 
@@ -168,10 +170,7 @@ class SkyscraperCrawler(AbstractCrawler):
                 url = urllib.parse.urljoin(response.url, f[1])
                 self.backlog.append((level, url))
 
-            # wait a randomized time
-            delay_setpoint = settings.DOWNLOAD_DELAY
-            delay = random.uniform(delay_setpoint * 0.5, delay_setpoint * 1.5)
-            time.sleep(delay)
+            self._wait_randomized(settings.DOWNLOAD_DELAY)
 
     def _run_extractors(self, rule_id, rules, content):
         data = {}
@@ -250,6 +249,8 @@ class SkyscraperCrawler(AbstractCrawler):
 
         if not representation_done:
             return elem.text_content()
+        else:
+            return elem
 
     def _stores_items(self, rule_id, rules):
         if rule_id not in rules:
@@ -259,6 +260,10 @@ class SkyscraperCrawler(AbstractCrawler):
             return True
         else:
             return rules[rule_id]['store_item']
+
+    def _wait_randomized(self, delay_setpoint):
+        delay = random.uniform(delay_setpoint * 0.5, delay_setpoint * 1.5)
+        time.sleep(delay)
 
 
 class AbstractSpiderRunner(abc.ABC):
