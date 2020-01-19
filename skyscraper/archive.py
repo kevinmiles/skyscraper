@@ -23,6 +23,9 @@ def files_in_date_range(folder, from_date, to_date_open_interval):
 
     filepaths = [os.path.join(folder, fn) for fn in os.listdir(folder)]
     for filepath in filepaths:
+        if not filepath.endswith('.json'):
+            continue
+
         d = datetime.datetime.utcfromtimestamp(os.path.getmtime(filepath))
 
         if from_date <= d < to_date_open_interval:
