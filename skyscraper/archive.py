@@ -8,6 +8,7 @@ import gzip
 def oldest_file_and_date(folder):
     try:
         filepaths = [os.path.join(folder, fn) for fn in os.listdir(folder)]
+        filepaths = [filepath for filepath in filepaths if filepath.endswith('.json')]
         oldest_file = min(filepaths, key=os.path.getmtime)
 
         oldest_date = datetime.datetime.utcfromtimestamp(
